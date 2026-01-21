@@ -1,18 +1,19 @@
-import { Rect, Transformer, Group, Text, Path } from "react-konva"
+import { Image, Transformer, Group, Rect, Path, Text } from "react-konva"
 import { useEffect, useRef, useState } from "react"
-import type { RectNode } from "../../types/editor"
+import useImage from "use-image"
+import type { CanvasNode, ImageNode } from "../../types/editor"
 
 type Props = {
-  node: RectNode
+  node: ImageNode
   selected: boolean
   onSelect: () => void
-  onUpdate: (id: string, attrs: Partial<RectNode>) => void
+  onUpdate: (id: string, attrs: Partial<ImageNode>) => void
   preview: boolean
-  setNodes: React.Dispatch<React.SetStateAction<RectNode[] | any>>
+  setNodes: React.Dispatch<React.SetStateAction<CanvasNode[]>>
   setSelectedId: (id: string | null) => void
 }
 
-export default function EditableRect({
+export default function EditableImage({
   node,
   selected,
   onSelect,
@@ -23,6 +24,9 @@ export default function EditableRect({
 }: Props) {
   const ref = useRef<any>(null)
   const trRef = useRef<any>(null)
+  const [img] = useImage(node.src || "")
+  const [actionPos, setActionPos] = useState({ x: 0, y: 0 })
+
 
   useEffect(() => {
     if (!preview && selected && trRef.current && ref.current) {
@@ -43,7 +47,6 @@ export default function EditableRect({
   }
 
   // Action bar position (centered above the node)
-  const [actionPos, setActionPos] = useState({ x: 0, y: 0 })
   useEffect(() => {
     if (!selected || !ref.current) return
     const box = ref.current.getClientRect()
@@ -52,14 +55,13 @@ export default function EditableRect({
     const x = box.x + box.width / 2 - barWidth / 2
     const y = box.y - barHeight - 8
     setActionPos({ x, y })
-  }, [selected, node.x, node.y, node.width, node.height, node.rotation, node.fill])
+  }, [selected, node.x, node.y, node.width, node.height, node.rotation, node.src])
 
   const [posDown, setPosDown] = useState(false)
   const [origIndex, setOrigIndex] = useState<number | null>(null)
 
   const togglePosition = () => {
     if (!posDown) {
-      // send down one step and remember original index so we can restore
       setNodes((prev: any[]) => {
         const idx = prev.findIndex(n => n.id === node.id)
         if (idx <= 0) return prev
@@ -70,7 +72,6 @@ export default function EditableRect({
         return arr
       })
     } else {
-      // restore to original index (if possible)
       setNodes((prev: any[]) => {
         const currIdx = prev.findIndex(n => n.id === node.id)
         if (currIdx === -1 || origIndex === null) return prev
@@ -91,23 +92,23 @@ export default function EditableRect({
 
   return (
     <>
-      <Rect
+      <Image
         ref={ref}
-        {...node}
+        image={img || undefined}
+        x={node.x}
+        y={node.y}
+        width={node.width}
+        height={node.height}
+        rotation={node.rotation}
         draggable={!preview}
-        listening={!preview} // ⬅ disables all mouse events in preview
+        listening={!preview}
         onClick={preview ? undefined : onSelect}
-        onDragEnd={preview ? undefined : (e) =>
-          onUpdate(node.id, {
-            x: e.target.x(),
-            y: e.target.y()
-          })
-        }
+        onDragEnd={preview ? undefined : (e) => onUpdate(node.id, { x: e.target.x(), y: e.target.y() })}
         onTransformEnd={preview ? undefined : () => {
           const r = ref.current
           onUpdate(node.id, {
-            width: r.width() * r.scaleX(),
-            height: r.height() * r.scaleY(),
+            width: Math.max(5, r.width() * r.scaleX()),
+            height: Math.max(5, r.height() * r.scaleY()),
             rotation: r.rotation()
           })
           r.scaleX(1)
@@ -121,8 +122,6 @@ export default function EditableRect({
 
           <Group x={actionPos.x} y={actionPos.y} listening>
             <Rect width={150} height={40} cornerRadius={6} fill="#ffffff" stroke="#d1d5db" shadowColor="#000" shadowBlur={6} shadowOpacity={0.06} />
-
-            {/* Duplicate icon (content copy) */}
             <Path
               data="M9 18q-.825 0-1.412-.587T7 16V4q0-.825.588-1.412T9 2h9q.825 0 1.413.588T20 4v12q0 .825-.587 1.413T18 18zm-4 4q-.825 0-1.412-.587T3 20V6h2v14h11v2z"
               x={12}
@@ -135,7 +134,6 @@ export default function EditableRect({
               onMouseLeave={e => { const stage = e.target.getStage(); if (stage && stage.container()) { stage.container().style.cursor = 'default' } }}
             />
 
-            {/* Delete icon */}
             <Path
               data="M7 21q-.825 0-1.412-.587T5 19V6q-.425 0-.712-.288T4 5t.288-.712T5 4h4q0-.425.288-.712T10 3h4q.425 0 .713.288T15 4h4q.425 0 .713.288T20 5t-.288.713T19 6v13q0 .825-.587 1.413T17 21zm3-4q.425 0 .713-.288T11 16V9q0-.425-.288-.712T10 8t-.712.288T9 9v7q0 .425.288.713T10 17m4 0q.425 0 .713-.288T15 16V9q0-.425-.288-.712T14 8t-.712.288T13 9v7q0 .425.288.713T14 17"
               x={40}
@@ -162,4 +160,4 @@ export default function EditableRect({
       )}
     </>
   )
-} 
+}

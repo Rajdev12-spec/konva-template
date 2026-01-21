@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react"
-import type { CanvasNode, RectNode, TextNode } from "../types/editor"
-import Sidebar from "./sidebar/Sidebar"
-import Canvas from "./canvas/Canvas"
-import Properties from "./properties/Properties"
 import { useUndoRedo } from "../hooks/useUndoRedo"
-import { RedoIcon, UndoIcon } from "../assets/icons"
+import type { CanvasNode, RectNode, TextNode, ImageNode, VideoNode, LinkNode, CardNode, ProfileCardNode, CarouselNode, QnaNode, DeviceType } from "../types/editor"
+import Canvas from "./canvas/Canvas"
+import Header from "./header"
+import Properties from "./properties/Properties"
+import Sidebar from "./sidebar/Sidebar"
 
 export default function Editor() {
     const {
@@ -17,6 +17,13 @@ export default function Editor() {
     } = useUndoRedo<CanvasNode[]>([])
     const [previewMode, setPreviewMode] = useState(false)
     const [selectedId, setSelectedId] = useState<string | null>(null)
+    const [device, setDevice] = useState<DeviceType>("desktop"); // default device
+
+    const deviceSizes = {
+        mobile: { width: 375, height: 667 },
+        tablet: { width: 768, height: 1024 },
+        desktop: { width: 1200, height: 800 },
+    };
 
 
     useEffect(() => {
@@ -42,19 +49,21 @@ export default function Editor() {
 
     const updateNode = (
         id: string,
-        attrs: Partial<TextNode> | Partial<RectNode>
+        attrs: Partial<CanvasNode>
+
     ) => {
         setNodes(
             nodes.map(node => {
                 if (node.id !== id) return node
-
-                if (node.type === "text") {
-                    return { ...node, ...(attrs as Partial<TextNode>) }
-                }
-
-                if (node.type === "rect") {
-                    return { ...node, ...(attrs as Partial<RectNode>) }
-                }
+                if (node.type === "text") return { ...node, ...(attrs as Partial<TextNode>) }
+                if (node.type === "rect") return { ...node, ...(attrs as Partial<RectNode>) }
+                if (node.type === "image") return { ...node, ...(attrs as Partial<ImageNode>) }
+                if (node.type === "video") return { ...node, ...(attrs as Partial<VideoNode>) }
+                if (node.type === "link") return { ...node, ...(attrs as Partial<LinkNode>) }
+                if (node.type === "card") return { ...node, ...(attrs as Partial<CardNode>) }
+                if (node.type === "profileCard") return { ...node, ...(attrs as Partial<ProfileCardNode>) }
+                if (node.type === "carousel") return { ...node, ...(attrs as Partial<CarouselNode>) }
+                if (node.type === "qna") return { ...node, ...(attrs as Partial<QnaNode>) }
 
                 return node
             })
@@ -74,96 +83,73 @@ export default function Editor() {
     }, [])
 
     return (
-        <div className="h-screen flex flex-col bg-[#f5f6f8]">
+        <div className="h-screen w-screen flex flex-col bg-[#f5f6f8]">
             {/* HEADER */}
-            <div className="h-16 flex items-center justify-between px-4 bg-white border-b border-gray-200">
-                {/* Undo / Redo */}
-                <div className="flex gap-3 items-center">
-                    <button
-                        onClick={undo}
-                        disabled={!canUndo}
-                        className={`
-                                border border-gray-300 rounded-lg p-1 transition
-                                ${canUndo
-                                ? "hover:bg-gray-100 cursor-pointer"
-                                : "opacity-40 cursor-not-allowed"}
-                            `}
-                    >
-                        <UndoIcon height={30} width={25} />
-                    </button>
+            <Header
+                canRedo={canRedo}
+                canUndo={canUndo}
+                handlePublish={handlePublish}
+                previewMode={previewMode}
+                redo={redo}
+                setPreviewMode={setPreviewMode}
+                undo={undo}
+                device={device}
+                setDevice={setDevice}
+            />
 
-                    <button
-                        onClick={redo}
-                        disabled={!canRedo}
-                        className={`
-                                border border-gray-300 rounded-lg p-1 transition
-                                ${canRedo
-                                ? "hover:bg-gray-100 cursor-pointer"
-                                : "opacity-40 cursor-not-allowed"}
-                        `}
-                    >
-                        <RedoIcon height={30} width={25} />
-                    </button>
-                </div>
 
-                <div className="flex gap-2">
-                    {!previewMode ? (
-                        <button
-                            onClick={() => setPreviewMode(true)}
-                            className="px-4 py-2 rounded-lg border hover:bg-gray-100"
-                        >
-                            Preview
-                        </button>
-                    ) : (
-                        <button
-                            onClick={() => setPreviewMode(false)}
-                            className="px-4 py-2 rounded-lg border hover:bg-gray-100"
-                        >
-                            Exit Preview
-                        </button>
-                    )}
-
-                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg" onClick={handlePublish}>
-                        Publish
-                    </button>
-                </div>
-
-            </div>
-
-            {/* MAIN EDITOR */}
             {/* MAIN EDITOR */}
             <div className="flex flex-1 overflow-hidden">
                 {!previewMode && (
-                    <div className="w-64 bg-white border-r border-gray-200">
-                        <Sidebar />
+                    <div className="w-64 h-full flex flex-col bg-white border-r border-gray-200">
+                        <div className="flex-1 overflow-y-auto">
+                            <Sidebar />
+                        </div>
                     </div>
                 )}
+
 
                 {/* CANVAS AREA */}
-                <div className="flex-1 flex items-center justify-center bg-[#f5f6f8]">
-                    <div className="bg-white rounded-lg shadow-lg p-3">
-                        <Canvas
-                            nodes={nodes}
-                            selectedId={previewMode ? null : selectedId}
-                            setSelectedId={previewMode ? () => { } : setSelectedId}
-                            updateNode={previewMode ? () => { } : updateNode}
-                            setNodes={previewMode ? () => { } : setNodes}
-                            preview={previewMode} // 👈 pass flag
-                        />
+                <div className="flex-1 bg-[#f5f6f8] overflow-auto">
+                    <div className="min-h-full min-w-full flex items-center justify-center p-12">
+                        <div
+                            className="
+                                    bg-white
+                                    rounded-xl
+                                    border border-gray-300
+                                    shadow-[0_10px_40px_rgba(0,0,0,0.12)]
+                                    "
+                            style={{
+                                width: deviceSizes[device].width,
+                                height: deviceSizes[device].height,
+                            }}
+                        >
+                            <Canvas
+                                nodes={nodes}
+                                selectedId={previewMode ? null : selectedId}
+                                setSelectedId={previewMode ? () => { } : setSelectedId}
+                                updateNode={updateNode}
+                                setNodes={previewMode ? () => { } : setNodes}
+                                preview={previewMode}
+                            />
+                        </div>
                     </div>
                 </div>
-
                 {!previewMode && (
-                    <div className="w-72 bg-white border-l border-gray-200">
-                        <Properties
-                            nodes={nodes}
-                            selectedId={selectedId}
-                            updateNode={updateNode}
-                        />
+                    <div className="w-80 h-full flex flex-col bg-white border-l border-gray-200">
+                        <div className="flex-1 overflow-y-auto">
+                            <Properties
+                                nodes={nodes}
+                                selectedId={selectedId}
+                                updateNode={updateNode}
+                                setNodes={setNodes}
+                                setSelectedId={setSelectedId}
+                            />
+                        </div>
                     </div>
                 )}
-            </div>
 
+            </div>
         </div>
     )
 
