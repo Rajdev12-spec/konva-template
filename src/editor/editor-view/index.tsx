@@ -1,11 +1,11 @@
-import type { CanvasNode, RectNode, TextNode } from "../../types/editor";
+import type { CanvasNode, CardNode, CarouselNode, ImageNode, LinkNode, ProfileCardNode, RectNode, TextNode, VideoNode } from "../../types/editor";
 import Canvas from "../canvas/Canvas"
 interface ViewModeProps {
     nodes: CanvasNode[];
     selectedId: string | null;
     previewMode: boolean;
     updateNode: (id: string,
-        attrs: Partial<TextNode> | Partial<RectNode>) => void;
+        attrs: Partial<TextNode> | Partial<RectNode> | Partial<ImageNode> | Partial<VideoNode> | Partial<CarouselNode> | Partial<LinkNode> | Partial<CardNode> | Partial<ProfileCardNode>) => void;
     setSelectedId: (id: string | null) => void;
     setNodes: React.Dispatch<React.SetStateAction<CanvasNode[]>>;
 }
