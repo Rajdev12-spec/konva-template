@@ -1,6 +1,7 @@
 import { Text, Transformer, Group, Rect, Path } from "react-konva"
 import { useEffect, useRef, useState } from "react"
 import type { CanvasNode, TextNode } from "../../types/editor"
+import { BASE_CANVAS } from "../Editor"
 
 type Props = {
   node: TextNode
@@ -10,6 +11,7 @@ type Props = {
   preview?: boolean
   setNodes: React.Dispatch<React.SetStateAction<CanvasNode[]>>
   setSelectedId: (id: string | null) => void
+  deviceSizes: { width: number, height: number }
 }
 
 
@@ -20,13 +22,17 @@ export default function EditableResizableText({
   onUpdate,
   preview,
   setNodes,
-  setSelectedId
+  setSelectedId,
+  deviceSizes
 }: Props) {
   const textRef = useRef<any>(null)
   const trRef = useRef<any>(null)
   const [editing, setEditing] = useState(false)
+  const [posDown, setPosDown] = useState(false)
+  const [origIndex, setOrigIndex] = useState<number | null>(null)
+  // compute action bar position centered above the Text node
+  const [actionPos, setActionPos] = useState({ x: 0, y: 0 })
 
-  console.log('preview: ', preview)
 
   useEffect(() => {
     if (selected && !editing && trRef.current && textRef.current) {
@@ -35,8 +41,7 @@ export default function EditableResizableText({
     }
   }, [selected, editing])
 
-  // compute action bar position centered above the Text node
-  const [actionPos, setActionPos] = useState({ x: 0, y: 0 })
+
   useEffect(() => {
     if (!selected || !textRef.current) return
     const box = textRef.current.getClientRect()
@@ -109,8 +114,7 @@ export default function EditableResizableText({
     setSelectedId(null)
   }
 
-  const [posDown, setPosDown] = useState(false)
-  const [origIndex, setOrigIndex] = useState<number | null>(null)
+
 
   const togglePosition = () => {
     if (!posDown) {
@@ -118,7 +122,7 @@ export default function EditableResizableText({
         const idx = prev.findIndex(n => n.id === node.id)
         if (idx <= 0) return prev
         const arr = [...prev]
-        ;[arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]]
+          ;[arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]]
         setPosDown(true)
         setOrigIndex(idx)
         return arr
@@ -141,12 +145,20 @@ export default function EditableResizableText({
       })
     }
   }
+  const scaleX = deviceSizes.width / BASE_CANVAS.width
+  const scaleY = deviceSizes.height / BASE_CANVAS.height
 
   return (
     <>
       <Text
         ref={textRef}
-        {...node}
+        x={node.x}
+        y={node.y}
+        text={node.text}
+        fontFamily={node.fontFamily}
+        fontSize={node.fontSize}
+        fill={node.fill}
+        rotation={node.rotation}
         draggable={!preview && !editing}
         visible={!editing}
         onClick={!preview ? onSelect : undefined}
@@ -154,7 +166,7 @@ export default function EditableResizableText({
         onDblClick={!preview ? () => setEditing(true) : undefined}
         onDragEnd={e => {
           if (preview) return
-          onUpdate(node.id, { x: e.target.x(), y: e.target.y() })
+          onUpdate(node.id, { x: e.target.x()/scaleX, y: e.target.y()/scaleY })
         }}
         onTransformEnd={() => {
           if (preview) return

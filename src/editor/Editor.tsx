@@ -5,6 +5,13 @@ import Canvas from "./canvas/Canvas"
 import Header from "./header"
 import Properties from "./properties/Properties"
 import Sidebar from "./sidebar/Sidebar"
+type DeviceSizes = {
+    mobile: { width: number, height: number },
+    tablet: { width: number, height: number },
+    desktop: { width: number, height: number },
+}
+
+export const BASE_CANVAS = { width: 1200, height: 800 };
 
 export default function Editor() {
     const {
@@ -19,7 +26,7 @@ export default function Editor() {
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [device, setDevice] = useState<DeviceType>("desktop"); // default device
 
-    const deviceSizes = {
+    const deviceSizes: DeviceSizes = {
         mobile: { width: 375, height: 667 },
         tablet: { width: 768, height: 1024 },
         desktop: { width: 1200, height: 800 },
@@ -122,6 +129,7 @@ export default function Editor() {
                             style={{
                                 width: deviceSizes[device].width,
                                 height: deviceSizes[device].height,
+                                background: 'black'
                             }}
                         >
                             <Canvas
@@ -131,6 +139,7 @@ export default function Editor() {
                                 updateNode={updateNode}
                                 setNodes={previewMode ? () => { } : setNodes}
                                 preview={previewMode}
+                                deviceSizes={deviceSizes[device]}
                             />
                         </div>
                     </div>

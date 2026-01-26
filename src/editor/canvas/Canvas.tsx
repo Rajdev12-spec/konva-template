@@ -2,6 +2,7 @@
 import { useRef, useState } from "react"
 import { Layer, Stage } from "react-konva"
 import type { CanvasNode, CarouselNode, ImageNode, RectNode, TextNode, VideoNode } from "../../types/editor"
+import { BASE_CANVAS } from "../Editor"
 import EditableCard from "./EditableCard"
 import EditableCarousel from "./EditableCarousel"
 import EditableImage from "./EditableImage"
@@ -19,9 +20,10 @@ type Props = {
   updateNode: (id: string, attrs: Partial<CanvasNode>) => void
   setNodes: React.Dispatch<React.SetStateAction<CanvasNode[]>>
   preview: boolean
+  deviceSizes: { width: number, height: number }
 }
 
-export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, setNodes, preview }: Props) {
+export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, setNodes, preview, deviceSizes }: Props) {
   const videoInputRef = useRef<HTMLInputElement | null>(null)
   const cardImageInputRef = useRef<HTMLInputElement | null>(null)
   const carouselImageInputRef = useRef<HTMLInputElement | null>(null)
@@ -44,13 +46,19 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
     const bounds = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - bounds.left
     const y = e.clientY - bounds.top
+    const scaleX = deviceSizes.width / BASE_CANVAS.width
+    const scaleY = deviceSizes.height / BASE_CANVAS.height
+    const scale = Math.min(scaleX, scaleY) // optional uniform scale
+    const baseX = x / scale
+    const baseY = y / scale
+
 
     if (type === "text") {
       const newNode: TextNode = {
         id: crypto.randomUUID(),
         type: "text",
-        x,
-        y,
+        x: baseX,
+        y: baseY,
         text: "New Text",
         fontSize: 24,
         fontFamily: "Arial",
@@ -204,9 +212,7 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
         }
       ])
     }
-
   }
-
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => e.preventDefault()
 
@@ -217,8 +223,9 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
       onDragOver={handleDragOver}
     >
       <Stage
-        width={window.innerWidth - 400}
-        height={window.innerHeight}
+        width={deviceSizes.width}
+        height={deviceSizes.height}
+        style={{ background: 'red' }}
         onMouseDown={(e: any) => {
           // If click happens on empty stage background (not on a shape), deselect
           if (!preview && e.target === e.target.getStage()) {
@@ -232,13 +239,14 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
               return (
                 <EditableResizableText
                   key={node.id}
-                  node={node}
+                  node={node}           
                   selected={!preview && node.id === selectedId}
                   onSelect={() => !preview && setSelectedId(node.id)}
                   onUpdate={preview ? () => { } : updateNode}
                   preview={preview}
                   setNodes={setNodes}
                   setSelectedId={setSelectedId}
+                  deviceSizes={deviceSizes}
                 />
               )
             }

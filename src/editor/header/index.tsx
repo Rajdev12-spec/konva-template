@@ -40,7 +40,7 @@ const Header = ({ canRedo, canUndo, handlePublish, previewMode, redo, setPreview
 
             <div className={`flex gap-2 ${previewMode && "justify-end w-full"}`}>
                 {/* Device Selector */}
-                {!previewMode && (
+                {previewMode && (
                     <select
                         value={device}
                         onChange={e => setDevice(e.target.value as DeviceType)}
