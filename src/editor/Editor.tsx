@@ -1,17 +1,24 @@
 import { useEffect, useState } from "react"
 import { useUndoRedo } from "../hooks/useUndoRedo"
-import type { CanvasNode, RectNode, TextNode, ImageNode, VideoNode, LinkNode, CardNode, ProfileCardNode, CarouselNode, QnaNode, DeviceType } from "../types/editor"
+import type { CanvasNode, RectNode, TextNode, ImageNode, VideoNode, LinkNode, CardNode, ProfileCardNode, CarouselNode, QnaNode, DeviceType, HeaderNode } from "../types/editor"
 import Canvas from "./canvas/Canvas"
 import Header from "./header"
 import Properties from "./properties/Properties"
 import Sidebar from "./sidebar/Sidebar"
+
 type DeviceSizes = {
     mobile: { width: number, height: number },
     tablet: { width: number, height: number },
     desktop: { width: number, height: number },
 }
 
-export const BASE_CANVAS = { width: 1200, height: 800 };
+export const BASE_CANVAS = { width: 900, height: 800 };
+
+const deviceSizes: DeviceSizes = {
+    mobile: { width: 375, height: 667 },
+    tablet: { width: 768, height: 1024 },
+    desktop: { width: 900, height: 800 },
+};
 
 export default function Editor() {
     const {
@@ -24,13 +31,10 @@ export default function Editor() {
     } = useUndoRedo<CanvasNode[]>([])
     const [previewMode, setPreviewMode] = useState(false)
     const [selectedId, setSelectedId] = useState<string | null>(null)
-    const [device, setDevice] = useState<DeviceType>("desktop"); // default device
-
-    const deviceSizes: DeviceSizes = {
-        mobile: { width: 375, height: 667 },
-        tablet: { width: 768, height: 1024 },
-        desktop: { width: 1200, height: 800 },
-    };
+    const [device, setDevice] = useState<DeviceType>("desktop");
+    const [canvasHeight, setCanvasHeight] = useState(
+        deviceSizes[device].height
+    );
 
 
     useEffect(() => {
@@ -53,6 +57,30 @@ export default function Editor() {
         return () => window.removeEventListener("keydown", handler)
     }, [undo, redo])
 
+    useEffect(() => {
+        const data = localStorage.getItem('data')
+        if (data) {
+            const paredData = JSON.parse(data)
+            setNodes(paredData)
+        }
+    }, [])
+
+    useEffect(() => {
+        const PADDING = 400;
+
+        const contentNodes = nodes.filter(n => n.type !== "header");
+
+        const maxBottom = Math.max(
+            deviceSizes[device].height,
+            ...contentNodes.map(n => {
+                const h = n.height ?? 50;
+                return (n.y ?? 0) + h;
+            })
+        );
+
+        setCanvasHeight(maxBottom + PADDING);
+    }, [nodes, device]);
+
 
     const updateNode = (
         id: string,
@@ -71,6 +99,7 @@ export default function Editor() {
                 if (node.type === "profileCard") return { ...node, ...(attrs as Partial<ProfileCardNode>) }
                 if (node.type === "carousel") return { ...node, ...(attrs as Partial<CarouselNode>) }
                 if (node.type === "qna") return { ...node, ...(attrs as Partial<QnaNode>) }
+                if (node.type === "header") return { ...node, ...(attrs as Partial<HeaderNode>) }
 
                 return node
             })
@@ -81,16 +110,13 @@ export default function Editor() {
         localStorage.setItem('data', JSON.stringify(nodes))
     }
 
-    useEffect(() => {
-        const data = localStorage.getItem('data')
-        if (data) {
-            const paredData = JSON.parse(data)
-            setNodes(paredData)
-        }
-    }, [])
+    const handleClosePreview = () => {
+        setPreviewMode(false);
+        setDevice("desktop");
+    }
 
     return (
-        <div className="h-screen w-screen flex flex-col bg-[#f5f6f8]">
+        <div className="h-screen w-screen flex flex-col bg-[#f5f6f8] ">
             {/* HEADER */}
             <Header
                 canRedo={canRedo}
@@ -102,6 +128,7 @@ export default function Editor() {
                 undo={undo}
                 device={device}
                 setDevice={setDevice}
+                handleClosePreview={handleClosePreview}
             />
 
 
@@ -128,9 +155,10 @@ export default function Editor() {
                                     "
                             style={{
                                 width: deviceSizes[device].width,
-                                height: deviceSizes[device].height,
-                                background: 'black'
+                                height: deviceSizes[device].height, // viewport only
+                                overflowY: "auto",
                             }}
+
                         >
                             <Canvas
                                 nodes={nodes}

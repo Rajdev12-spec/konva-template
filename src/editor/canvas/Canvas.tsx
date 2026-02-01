@@ -1,7 +1,7 @@
 // Canvas.tsx
 import { useRef, useState } from "react"
-import { Layer, Stage } from "react-konva"
-import type { CanvasNode, CarouselNode, ImageNode, RectNode, TextNode, VideoNode } from "../../types/editor"
+import { Group, Layer, Rect, Stage, Text } from "react-konva"
+import type { CanvasNode, CarouselNode, HeaderNode, ImageNode, RectNode, TextNode, VideoNode } from "../../types/editor"
 import { BASE_CANVAS } from "../Editor"
 import EditableCard from "./EditableCard"
 import EditableCarousel from "./EditableCarousel"
@@ -12,6 +12,7 @@ import EditableQna from "./EditableQnA"
 import EditableRect from "./EditableRect"
 import EditableResizableText from "./EditableText"
 import EditableVideo from "./EditableVideo"
+import EditableHeader from "./EditableHeader"
 
 type Props = {
   nodes: CanvasNode[]
@@ -30,6 +31,12 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
   const [isUploading, setIsUploading] = useState(false)
 
 
+
+  const scaleX = deviceSizes.width / BASE_CANVAS.width;
+  const scaleY = deviceSizes.height / BASE_CANVAS.height;
+  const scale = Math.min(scaleX, scaleY);
+
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     const type = e.dataTransfer.getData("nodeType") as
@@ -42,15 +49,35 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
       | "profileCard"
       | "carousel"
       | "qna"
+      | "header"
 
     const bounds = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - bounds.left
     const y = e.clientY - bounds.top
-    const scaleX = deviceSizes.width / BASE_CANVAS.width
-    const scaleY = deviceSizes.height / BASE_CANVAS.height
-    const scale = Math.min(scaleX, scaleY) // optional uniform scale
     const baseX = x / scale
     const baseY = y / scale
+
+    if (type === "header") {
+      const newNode: HeaderNode = {
+        id: crypto.randomUUID(),
+        type: "header",
+        x: 0,
+        y: 0,
+        width: BASE_CANVAS.width,
+        height: 80,
+        logoText: "LOGO",
+        background: "#0096FF",
+        menu: [
+          { id: crypto.randomUUID(), label: "Home" },
+          { id: crypto.randomUUID(), label: "About" },
+          { id: crypto.randomUUID(), label: "Contact" }
+        ]
+      }
+
+      setNodes(prev => [...prev, newNode])
+      setSelectedId(newNode.id)
+    }
+
 
 
     if (type === "text") {
@@ -72,8 +99,8 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
       const newNode: RectNode = {
         id: crypto.randomUUID(),
         type: "rect",
-        x,
-        y,
+        x: baseX,
+        y: baseY,
         width: 150,
         height: 100,
         fill: "black",
@@ -212,9 +239,18 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
         }
       ])
     }
+    // if(type==="header")[
+    //   setNodes((node)=>)
+    // ]
   }
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => e.preventDefault()
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => e.preventDefault();
+
+
+  const offsetX = (deviceSizes.width - BASE_CANVAS.width * scale) / 2
+  const offsetY = (deviceSizes.height - BASE_CANVAS.height * scale) / 2
+
+  console.log(deviceSizes)
 
   return (
     <div
@@ -225,7 +261,10 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
       <Stage
         width={deviceSizes.width}
         height={deviceSizes.height}
-        style={{ background: 'red' }}
+        x={offsetX}
+        y={offsetY}
+        scaleX={scale}
+        scaleY={scale}
         onMouseDown={(e: any) => {
           // If click happens on empty stage background (not on a shape), deselect
           if (!preview && e.target === e.target.getStage()) {
@@ -234,19 +273,39 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
         }}
       >
         <Layer>
+          {
+            nodes.map(node => {
+              if (node.type === "header") {
+                return (
+                  <EditableHeader
+                    key={node.id}
+                    node={node}
+                    selected={!preview && node.id === selectedId}
+                    preview={preview}
+                    onSelect={() => !preview && setSelectedId(node.id)}
+                  />
+                )
+              }
+              return null
+            })
+          }
+        </Layer>
+        <Layer
+        >
           {nodes.map(node => {
+
+
             if (node.type === "text") {
               return (
                 <EditableResizableText
                   key={node.id}
-                  node={node}           
+                  node={node}
                   selected={!preview && node.id === selectedId}
                   onSelect={() => !preview && setSelectedId(node.id)}
                   onUpdate={preview ? () => { } : updateNode}
                   preview={preview}
                   setNodes={setNodes}
                   setSelectedId={setSelectedId}
-                  deviceSizes={deviceSizes}
                 />
               )
             }

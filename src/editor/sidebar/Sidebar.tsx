@@ -71,9 +71,17 @@ export default function Sidebar() {
       <div
         draggable
         onDragStart={e => e.dataTransfer.setData("nodeType", "qna")}
-        className="border p-2 cursor-grab"
+        className="border border-[#ccc] p-2 cursor-grab"
       >
         Q&A
+      </div>
+
+      <div
+        draggable
+        onDragStart={e => e.dataTransfer.setData("nodeType", "header")}
+        className="border border-[#ccc] p-2 cursor-grab"
+      >
+        Header
       </div>
 
     </div>

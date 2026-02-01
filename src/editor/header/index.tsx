@@ -11,9 +11,10 @@ interface HeaderProps {
     device: DeviceType;
     setDevice: (val: DeviceType) => void;
     handlePublish: () => void;
+    handleClosePreview: () => void;
 }
 
-const Header = ({ canRedo, canUndo, handlePublish, previewMode, redo, setPreviewMode, undo, device, setDevice }: HeaderProps) => {
+const Header = ({ canRedo, canUndo, handlePublish, previewMode, redo, setPreviewMode, undo, device, setDevice, handleClosePreview }: HeaderProps) => {
     return (
         <div className="h-16 flex items-center justify-between px-4 bg-white border-b border-gray-200">
             {!previewMode &&
@@ -61,7 +62,7 @@ const Header = ({ canRedo, canUndo, handlePublish, previewMode, redo, setPreview
                     </button>
                 ) : (
                     <button
-                        onClick={() => setPreviewMode(false)}
+                        onClick={() => handleClosePreview()}
                         className="cursor-pointer px-4 py-2 rounded-lg border hover:bg-gray-100"
                     >
                         Exit Preview

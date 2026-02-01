@@ -585,6 +585,56 @@ export default function Properties({
     </div>
   );
 }
+if (node.type === "header") {
+  const n = node
+
+  const updateMenu = (id: string, label: string) => {
+    updateNode(n.id, {
+      menu: n.menu.map(m => m.id === id ? { ...m, label } : m)
+    })
+  }
+
+  const addMenu = () => {
+    updateNode(n.id, {
+      menu: [...n.menu, { id: crypto.randomUUID(), label: "New Menu" }]
+    })
+  }
+
+  const removeMenu = (id: string) => {
+    updateNode(n.id, {
+      menu: n.menu.filter(m => m.id !== id)
+    })
+  }
+
+  return (
+    <div style={{ padding: 10 }}>
+      <h4>Header Settings</h4>
+
+      <label>Logo Text</label>
+      <input
+        value={n.logoText}
+        onChange={e => updateNode(n.id, { logoText: e.target.value })}
+        style={{ width: "100%" }}
+      />
+
+      <h5 style={{ marginTop: 12 }}>Menu</h5>
+
+      {n.menu.map(m => (
+        <div key={m.id} style={{ display: "flex", gap: 4 }}>
+          <input
+            value={m.label}
+            onChange={e => updateMenu(m.id, e.target.value)}
+          />
+          <button onClick={() => removeMenu(m.id)}>❌</button>
+        </div>
+      ))}
+
+      <button onClick={addMenu} style={{ marginTop: 8 }}>
+        ➕ Add Menu
+      </button>
+    </div>
+  )
+}
 
 
 
