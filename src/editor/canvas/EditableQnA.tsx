@@ -56,7 +56,8 @@ export default function EditableQna({
         x={node.x}
         y={node.y}
         draggable={!preview}
-        onClick={() => !preview && onSelect()}
+        onClick={onSelect}
+        onTap={onSelect}
         onDragEnd={e =>
           onUpdate(node.id, {
             x: e.target.x(),

@@ -149,8 +149,8 @@ export default function EditableVideo({
         height={node.height}
         rotation={node.rotation}
         draggable={!preview}
-        listening={!preview}
-        onClick={preview ? undefined : onSelect}
+        listening={true}
+        onClick={onSelect}
         onDragEnd={e =>
           onUpdate(node.id, {
             x: e.target.x(),

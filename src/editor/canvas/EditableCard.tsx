@@ -109,8 +109,8 @@ export default function EditableCard({
         x={node.x}
         y={node.y}
         draggable={!preview}
-        listening={!preview}
-        onClick={preview ? undefined : onSelect}
+        listening={true}
+        onClick={onSelect}
         onDragEnd={e =>
           onUpdate(node.id, {
             x: e.target.x(),

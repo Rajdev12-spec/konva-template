@@ -95,8 +95,8 @@ export default function EditableRect({
         ref={ref}
         {...node}
         draggable={!preview}
-        listening={!preview} // ⬅ disables all mouse events in preview
-        onClick={preview ? undefined : onSelect}
+        listening={true}
+        onClick={onSelect}
         onDragEnd={preview ? undefined : (e) =>
           onUpdate(node.id, {
             x: e.target.x(),

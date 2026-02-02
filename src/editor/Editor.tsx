@@ -144,17 +144,17 @@ export default function Editor() {
                         >
                             <Canvas
                                 nodes={nodes}
-                                selectedId={previewMode ? null : selectedId}
-                                setSelectedId={previewMode ? () => { } : setSelectedId}
+                                selectedId={selectedId}
+                                setSelectedId={setSelectedId}
                                 updateNode={updateNode}
-                                setNodes={previewMode ? () => { } : setNodes}
+                                setNodes={setNodes}
                                 preview={previewMode}
                                 deviceSizes={deviceSizes[device]}
                             />
                         </div>
                     </div>
                 </div>
-                {!previewMode && (
+                {selectedId && (
                     <div className="w-80 h-full flex flex-col bg-white border-l border-gray-200">
                         <div className="flex-1 overflow-y-auto">
                             <Properties

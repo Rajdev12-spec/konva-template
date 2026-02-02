@@ -329,7 +329,7 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
         scaleY={scale}
         onMouseDown={(e: any) => {
           // If click happens on empty stage background (not on a shape), deselect
-          if (!preview && e.target === e.target.getStage()) {
+          if (e.target === e.target.getStage()) {
             setSelectedId(null)
           }
         }}
@@ -342,9 +342,9 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
                   <EditableHeader
                     key={node.id}
                     node={node}
-                    selected={!preview && node.id === selectedId}
+                    selected={node.id === selectedId}
                     preview={preview}
-                    onSelect={() => !preview && setSelectedId(node.id)}
+                    onSelect={() => setSelectedId(node.id)}
                   />
                 )
               }
@@ -353,9 +353,9 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
                   <EditableFooter
                     key={node.id}
                     node={{ ...node, y: footerY } as FooterNode}
-                    selected={!preview && node.id === selectedId}
+                    selected={node.id === selectedId}
                     preview={preview}
-                    onSelect={() => !preview && setSelectedId(node.id)}
+                    onSelect={() => setSelectedId(node.id)}
                   />
                 )
               }
@@ -366,16 +366,14 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
         <Layer
         >
           {nodes.map(node => {
-
-
             if (node.type === "text") {
               return (
                 <EditableResizableText
                   key={node.id}
                   node={node}
-                  selected={!preview && node.id === selectedId}
-                  onSelect={() => !preview && setSelectedId(node.id)}
-                  onUpdate={preview ? () => { } : updateNode}
+                  selected={node.id === selectedId}
+                  onSelect={() => setSelectedId(node.id)}
+                  onUpdate={updateNode}
                   preview={preview}
                   setNodes={setNodes}
                   setSelectedId={setSelectedId}
@@ -419,9 +417,9 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
                   preview={preview}
                   setNodes={setNodes}
                   setSelectedId={setSelectedId}
-                  onUpdate={preview ? () => { } : updateNode}
-                  selected={!preview && node.id === selectedId}
-                  onSelect={() => !preview && setSelectedId(node.id)}
+                  onUpdate={updateNode}
+                  selected={node.id === selectedId}
+                  onSelect={() => setSelectedId(node.id)}
                   scale={scale}
                 />
               )
@@ -450,9 +448,9 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
                   preview={preview}
                   setNodes={setNodes}
                   setSelectedId={setSelectedId}
-                  onUpdate={preview ? () => { } : updateNode}
-                  selected={!preview && node.id === selectedId}
-                  onSelect={() => !preview && setSelectedId(node.id)}
+                  onUpdate={updateNode}
+                  selected={node.id === selectedId}
+                  onSelect={() => setSelectedId(node.id)}
                   scale={scale}
                 />
               )
@@ -463,12 +461,12 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
                 <EditableProfileCard
                   key={node.id}
                   node={node}
-                  selected={!preview && node.id === selectedId}
+                  selected={node.id === selectedId}
                   preview={preview}
                   setNodes={setNodes}
                   setSelectedId={setSelectedId}
-                  onSelect={() => !preview && setSelectedId(node.id)}
-                  onUpdate={preview ? () => { } : updateNode}
+                  onSelect={() => setSelectedId(node.id)}
+                  onUpdate={updateNode}
                   scale={scale}
                 />
               )
@@ -479,11 +477,11 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
                 <EditableCarousel
                   key={node.id}
                   node={node}
-                  selected={!preview && node.id === selectedId}
+                  selected={node.id === selectedId}
                   preview={preview}
                   setNodes={setNodes}
                   setSelectedId={setSelectedId}
-                  onSelect={() => !preview && setSelectedId(node.id)}
+                  onSelect={() => setSelectedId(node.id)}
                   onUpdate={(id, attrs) => {
                     updateNode(id, attrs)
                   }}
@@ -502,9 +500,9 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
                 <EditableQna
                   key={node.id}
                   node={node}
-                  selected={!preview && node.id === selectedId}
+                  selected={node.id === selectedId}
                   preview={preview}
-                  onSelect={() => !preview && setSelectedId(node.id)}
+                  onSelect={() => setSelectedId(node.id)}
                   onUpdate={updateNode}
                 />
               )
