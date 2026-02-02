@@ -1,10 +1,11 @@
 // Canvas.tsx
-import { useRef, useState } from "react"
-import { Group, Layer, Rect, Stage, Text } from "react-konva"
+import { useEffect, useRef, useState } from "react"
+import { Layer, Stage } from "react-konva"
 import type { CanvasNode, CarouselNode, HeaderNode, ImageNode, RectNode, TextNode, VideoNode } from "../../types/editor"
 import { BASE_CANVAS } from "../Editor"
 import EditableCard from "./EditableCard"
 import EditableCarousel from "./EditableCarousel"
+import EditableHeader from "./EditableHeader"
 import EditableImage from "./EditableImage"
 import EditableLink from "./EditableLink"
 import EditableProfileCard from "./EditableProfileCard"
@@ -12,7 +13,6 @@ import EditableQna from "./EditableQnA"
 import EditableRect from "./EditableRect"
 import EditableResizableText from "./EditableText"
 import EditableVideo from "./EditableVideo"
-import EditableHeader from "./EditableHeader"
 
 type Props = {
   nodes: CanvasNode[]
@@ -25,16 +25,48 @@ type Props = {
 }
 
 export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, setNodes, preview, deviceSizes }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerWidth, setContainerWidth] = useState(deviceSizes.width)
   const videoInputRef = useRef<HTMLInputElement | null>(null)
   const cardImageInputRef = useRef<HTMLInputElement | null>(null)
   const carouselImageInputRef = useRef<HTMLInputElement | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
+  const [isUploading, setIsUploading] = useState(false);
 
+  // Sync with device change
+  useEffect(() => {
+    setContainerWidth(deviceSizes.width)
+  }, [deviceSizes.width])
 
+  // Observe actual container size
+  useEffect(() => {
+    if (!containerRef.current) return
+    const obs = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const newWidth = entry.contentRect.width
+        setContainerWidth(prev => {
+          // Only update if difference is > 1px to avoid oscillation
+          if (Math.abs(prev - newWidth) > 1) {
+            return newWidth
+          }
+          return prev
+        })
+      }
+    })
+    obs.observe(containerRef.current)
+    return () => obs.disconnect()
+  }, [])
 
-  const scaleX = deviceSizes.width / BASE_CANVAS.width;
-  const scaleY = deviceSizes.height / BASE_CANVAS.height;
-  const scale = Math.min(scaleX, scaleY);
+  const scale = containerWidth / BASE_CANVAS.width;
+
+  const maxContentHeight = Math.max(
+    BASE_CANVAS.height,
+    ...nodes.map(node => {
+      const h = (node as any).height || 0;
+      return node.y + h;
+    })
+  )
+
+  const stageHeight = maxContentHeight * scale;
 
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -54,8 +86,8 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
     const bounds = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - bounds.left
     const y = e.clientY - bounds.top
-    const baseX = x / scale
-    const baseY = y / scale
+    const baseX = (x - offsetX) / scale
+    const baseY = (y - offsetY) / scale
 
     if (type === "header") {
       const newNode: HeaderNode = {
@@ -63,19 +95,20 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
         type: "header",
         x: 0,
         y: 0,
-        width: BASE_CANVAS.width,
-        height: 80,
+        width: 1200,
+        height: 70,
         logoText: "LOGO",
         background: "#0096FF",
         menu: [
-          { id: crypto.randomUUID(), label: "Home" },
-          { id: crypto.randomUUID(), label: "About" },
-          { id: crypto.randomUUID(), label: "Contact" }
+          { id: crypto.randomUUID(), label: "Home", href: "#" },
+          { id: crypto.randomUUID(), label: "About", href: "#" },
+          { id: crypto.randomUUID(), label: "Contact", href: "#" }
         ]
       }
 
-      setNodes(prev => [...prev, newNode])
+      setNodes(prev => [...prev.filter(n => n.type !== "header"), newNode])
       setSelectedId(newNode.id)
+      return;
     }
 
 
@@ -113,8 +146,8 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
       const newNode: ImageNode = {
         id: crypto.randomUUID(),
         type: "image",
-        x,
-        y,
+        x: baseX,
+        y: baseY,
         width: 200,
         height: 150,
         src: undefined,
@@ -128,8 +161,8 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
       const newNode: VideoNode = {
         id: crypto.randomUUID(),
         type: "video",
-        x,
-        y,
+        x: baseX,
+        y: baseY,
         width: 300,
         height: 200,
         rotation: 0,
@@ -147,8 +180,8 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
         {
           id: crypto.randomUUID(),
           type: "link",
-          x,
-          y,
+          x: baseX,
+          y: baseY,
           width: 160,
           height: 40,
           text: "Visit website",
@@ -167,8 +200,8 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
         {
           id: crypto.randomUUID(),
           type: "card",
-          x,
-          y,
+          x: baseX,
+          y: baseY,
           width: 250,
           height: 350,
           title: "Card Title",
@@ -185,8 +218,8 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
         {
           id: crypto.randomUUID(),
           type: "profileCard",
-          x,
-          y,
+          x: baseX,
+          y: baseY,
           width: 200,
           height: 300,
           name: "Name",
@@ -203,8 +236,8 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
         {
           id: crypto.randomUUID(),
           type: "carousel",
-          x,
-          y,
+          x: baseX,
+          y: baseY,
           width: 800,
           height: 300,
           activeIndex: 0,
@@ -220,8 +253,8 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
         {
           id: crypto.randomUUID(),
           type: "qna",
-          x,
-          y,
+          x: baseX,
+          y: baseY,
           width: 420,
           height: 220,
           items: [
@@ -247,20 +280,21 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => e.preventDefault();
 
 
-  const offsetX = (deviceSizes.width - BASE_CANVAS.width * scale) / 2
-  const offsetY = (deviceSizes.height - BASE_CANVAS.height * scale) / 2
+  const offsetX = 0
+  const offsetY = 0
 
   console.log(deviceSizes)
 
   return (
     <div
-      style={{ flex: 1 }}
+      ref={containerRef}
+      style={{ width: "100%", height: stageHeight }}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
     >
       <Stage
-        width={deviceSizes.width}
-        height={deviceSizes.height}
+        width={containerWidth}
+        height={stageHeight}
         x={offsetX}
         y={offsetY}
         scaleX={scale}
@@ -349,6 +383,7 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
                   onUpdate={preview ? () => { } : updateNode}
                   selected={!preview && node.id === selectedId}
                   onSelect={() => !preview && setSelectedId(node.id)}
+                  scale={scale}
                 />
               )
             }
@@ -379,6 +414,7 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
                   onUpdate={preview ? () => { } : updateNode}
                   selected={!preview && node.id === selectedId}
                   onSelect={() => !preview && setSelectedId(node.id)}
+                  scale={scale}
                 />
               )
             }
@@ -394,6 +430,7 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
                   setSelectedId={setSelectedId}
                   onSelect={() => !preview && setSelectedId(node.id)}
                   onUpdate={preview ? () => { } : updateNode}
+                  scale={scale}
                 />
               )
             }

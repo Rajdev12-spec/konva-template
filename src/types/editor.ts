@@ -123,6 +123,7 @@ export type QnaNode = {
 export type HeaderMenuItem = {
   id: string
   label: string
+  href: string
 }
 
 export type HeaderNode = {

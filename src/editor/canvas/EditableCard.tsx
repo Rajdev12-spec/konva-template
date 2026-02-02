@@ -11,6 +11,7 @@ type Props = {
   setSelectedId: (id: string | null) => void
   onUpdate: (id: string, attrs: Partial<CardNode>) => void
   setNodes: React.Dispatch<React.SetStateAction<CanvasNode[]>>
+  scale: number
 }
 
 const MIN_WIDTH = 160
@@ -23,7 +24,8 @@ export default function EditableCard({
   onSelect,
   setNodes,
   onUpdate,
-  setSelectedId
+  setSelectedId,
+  scale
 }: Props) {
   const groupRef = useRef<Konva.Group>(null)
   const trRef = useRef<Konva.Transformer>(null)
@@ -31,8 +33,6 @@ export default function EditableCard({
   const [imgElement, setImgElement] = useState<HTMLImageElement | null>(null)
   const [posDown, setPosDown] = useState(false)
   const [origIndex, setOrigIndex] = useState<number | null>(null)
-  const [actionPos, setActionPos] = useState({ x: 0, y: 0 })
-
   /* Load image */
   useEffect(() => {
     if (!node.image) return
@@ -50,43 +50,35 @@ export default function EditableCard({
     }
   }, [selected, preview])
 
-  /* Action bar position (EXACT same logic as Video) */
-  useEffect(() => {
-    if (!selected || !groupRef.current) return
-    const box = groupRef.current.getClientRect()
-    const barWidth = 150
-    const barHeight = 40
-    const x = box.x + box.width / 2 - barWidth / 2
-    const y = box.y - barHeight - 8
-    setActionPos({ x, y })
-  }, [selected, node.x, node.y, node.width, node.height])
-
   /* Duplicate */
-  const duplicateNode = () => {
+  const duplicateNode = (e: any) => {
+    if (e) e.cancelBubble = true
     const copy = {
       ...node,
       id: crypto.randomUUID(),
-      x: node.x + 10,
-      y: node.y + 10
+      x: node.x + 20,
+      y: node.y + 20
     }
     setNodes(prev => [...prev, copy])
     setSelectedId(copy.id)
   }
 
   /* Delete */
-  const deleteNode = () => {
+  const deleteNode = (e: any) => {
+    if (e) e.cancelBubble = true
     setNodes(prev => prev.filter(n => n.id !== node.id))
     setSelectedId(null)
   }
 
   /* Position toggle */
-  const togglePosition = () => {
+  const togglePosition = (e: any) => {
+    if (e) e.cancelBubble = true
     if (!posDown) {
       setNodes(prev => {
         const idx = prev.findIndex(n => n.id === node.id)
         if (idx <= 0) return prev
         const arr = [...prev]
-        ;[arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]]
+          ;[arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]]
         setPosDown(true)
         setOrigIndex(idx)
         return arr
@@ -193,9 +185,15 @@ export default function EditableCard({
       {/* Transformer */}
       {!preview && selected && <Transformer ref={trRef} />}
 
-      {/* Action bar – SAME AS VIDEO */}
+      {/* Action bar */}
       {!preview && selected && (
-        <Group x={actionPos.x} y={actionPos.y} listening>
+        <Group
+          x={node.x + (node.width / 2) - (150 / 2 / scale)}
+          y={node.y - (50 / scale)}
+          scaleX={1 / scale}
+          scaleY={1 / scale}
+          listening
+        >
           <Rect
             width={150}
             height={40}
@@ -207,35 +205,46 @@ export default function EditableCard({
             shadowOpacity={0.06}
           />
 
-          {/* Duplicate */}
+          {/* Duplicate Icon */}
           <Path
             data="M9 18q-.825 0-1.412-.587T7 16V4q0-.825.588-1.412T9 2h9q.825 0 1.413.588T20 4v12q0 .825-.587 1.413T18 18zm-4 4q-.825 0-1.412-.587T3 20V6h2v14h11v2z"
             x={12}
-            y={9}
-            scaleX={0.85}
-            scaleY={0.85}
+            y={8}
+            scaleX={1}
+            scaleY={1}
             fill="#111827"
-            onClick={duplicateNode}            
+            onClick={duplicateNode}
+            onTap={duplicateNode}
+            onMouseEnter={e => { e.target.getStage()!.container().style.cursor = 'pointer' }}
+            onMouseLeave={e => { e.target.getStage()!.container().style.cursor = 'default' }}
           />
 
-          {/* Delete */}
+          {/* Delete Icon */}
           <Path
-            data="M7 21q-.825 0-1.412-.587T5 19V6h14v13q0 .825-.587 1.413T17 21z"
-            x={40}
-            y={9}
-            scaleX={0.85}
-            scaleY={0.85}
+            data="M7 21q-.825 0-1.412-.587T5 19V6q-.425 0-.712-.288T4 5t.288-.712T5 4h4q0-.425.288-.712T10 3h4q.425 0 .713.288T15 4h4q.425 0 .713.288T20 5t-.288.713T19 6v13q0 .825-.587 1.413T17 21zm3-4q.425 0 .713-.288T11 16V9q0-.425-.288-.712T10 8t-.712.288T9 9v7q0 .425.288.713T10 17m4 0q.425 0 .713-.288T15 16V9q0-.425-.288-.712T14 8t-.712.288T13 9v7q0 .425.288.713T14 17"
+            x={42}
+            y={8}
+            scaleX={1}
+            scaleY={1}
             fill="#111827"
-            onClick={deleteNode}          
+            onClick={deleteNode}
+            onTap={deleteNode}
+            onMouseEnter={e => { e.target.getStage()!.container().style.cursor = 'pointer' }}
+            onMouseLeave={e => { e.target.getStage()!.container().style.cursor = 'default' }}
           />
 
-          {/* Position */}
+          {/* Position Text */}
           <Text
             text={`Position ${posDown ? "↑" : "↓"}`}
-            x={72}
-            y={8}
+            x={75}
+            y={14}
             fontSize={12}
-            onClick={togglePosition}           
+            fontStyle="bold"
+            fill="#111827"
+            onClick={togglePosition}
+            onTap={togglePosition}
+            onMouseEnter={e => { e.target.getStage()!.container().style.cursor = 'pointer' }}
+            onMouseLeave={e => { e.target.getStage()!.container().style.cursor = 'default' }}
           />
         </Group>
       )}

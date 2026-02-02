@@ -12,12 +12,12 @@ type DeviceSizes = {
     desktop: { width: number, height: number },
 }
 
-export const BASE_CANVAS = { width: 900, height: 800 };
+export const BASE_CANVAS = { width: 1200, height: 800 };
 
 const deviceSizes: DeviceSizes = {
     mobile: { width: 375, height: 667 },
     tablet: { width: 768, height: 1024 },
-    desktop: { width: 900, height: 800 },
+    desktop: { width: 1200, height: 800 },
 };
 
 export default function Editor() {
@@ -32,10 +32,6 @@ export default function Editor() {
     const [previewMode, setPreviewMode] = useState(false)
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [device, setDevice] = useState<DeviceType>("desktop");
-    const [canvasHeight, setCanvasHeight] = useState(
-        deviceSizes[device].height
-    );
-
 
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
@@ -64,23 +60,6 @@ export default function Editor() {
             setNodes(paredData)
         }
     }, [])
-
-    useEffect(() => {
-        const PADDING = 400;
-
-        const contentNodes = nodes.filter(n => n.type !== "header");
-
-        const maxBottom = Math.max(
-            deviceSizes[device].height,
-            ...contentNodes.map(n => {
-                const h = n.height ?? 50;
-                return (n.y ?? 0) + h;
-            })
-        );
-
-        setCanvasHeight(maxBottom + PADDING);
-    }, [nodes, device]);
-
 
     const updateNode = (
         id: string,
@@ -149,14 +128,16 @@ export default function Editor() {
                         <div
                             className="
                                     bg-white
-                                    rounded-xl
                                     border border-gray-300
                                     shadow-[0_10px_40px_rgba(0,0,0,0.12)]
                                     "
                             style={{
-                                width: deviceSizes[device].width,
-                                height: deviceSizes[device].height, // viewport only
-                                overflowY: "auto",
+                                width: "100%",
+                                maxWidth: deviceSizes[device].width,
+                                height: deviceSizes[device].height,
+                                overflowY: "scroll",
+                                overflowX: "auto",
+                                scrollbarGutter: "stable",
                             }}
 
                         >
