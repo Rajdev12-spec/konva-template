@@ -99,9 +99,9 @@ export default function EditableLink({
         x={node.x}
         y={node.y}
         draggable={!preview}
-        listening={!preview}
-        onClick={!preview ? onSelect : undefined}
-        onTap={!preview ? onSelect : undefined}
+        listening={true}
+        onClick={onSelect}
+        onTap={onSelect}
         onDragEnd={e =>
           onUpdate(node.id, { x: e.target.x(), y: e.target.y() })
         }

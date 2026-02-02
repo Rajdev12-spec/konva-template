@@ -101,8 +101,8 @@ export default function EditableImage({
         height={node.height}
         rotation={node.rotation}
         draggable={!preview}
-        listening={!preview}
-        onClick={preview ? undefined : onSelect}
+        listening={true}
+        onClick={onSelect}
         onDragEnd={preview ? undefined : (e) => onUpdate(node.id, { x: e.target.x(), y: e.target.y() })}
         onTransformEnd={preview ? undefined : () => {
           const r = ref.current

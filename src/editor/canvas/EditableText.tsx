@@ -187,8 +187,8 @@ export default function EditableResizableText({
         rotation={node.rotation}
         draggable={!preview && !editing}
         visible={!editing}
-        onClick={!preview ? onSelect : undefined}
-        onTap={!preview ? onSelect : undefined}
+        onClick={onSelect}
+        onTap={onSelect}
         onDblClick={!preview ? () => setEditing(true) : undefined}
         onDragEnd={(e) => {
           if (preview) return;
