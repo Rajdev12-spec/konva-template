@@ -120,6 +120,27 @@ export type QnaNode = {
   items: QnaItem[]
 }
 
+export type HeaderMenuItem = {
+  id: string
+  label: string
+  href: string
+}
+
+export type HeaderNode = {
+  id: string
+  type: "header"
+  x: number
+  y: number
+  width: number
+  height: number
+  logoText: string
+  menu: HeaderMenuItem[]
+  background: string
+}
+
+
+
+
 
 
 
@@ -133,3 +154,4 @@ export type CanvasNode =
   | ProfileCardNode
   | CarouselNode
   | QnaNode
+  | HeaderNode

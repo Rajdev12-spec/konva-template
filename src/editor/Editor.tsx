@@ -1,10 +1,24 @@
 import { useEffect, useState } from "react"
 import { useUndoRedo } from "../hooks/useUndoRedo"
-import type { CanvasNode, RectNode, TextNode, ImageNode, VideoNode, LinkNode, CardNode, ProfileCardNode, CarouselNode, QnaNode, DeviceType } from "../types/editor"
+import type { CanvasNode, RectNode, TextNode, ImageNode, VideoNode, LinkNode, CardNode, ProfileCardNode, CarouselNode, QnaNode, DeviceType, HeaderNode } from "../types/editor"
 import Canvas from "./canvas/Canvas"
 import Header from "./header"
 import Properties from "./properties/Properties"
 import Sidebar from "./sidebar/Sidebar"
+
+type DeviceSizes = {
+    mobile: { width: number, height: number },
+    tablet: { width: number, height: number },
+    desktop: { width: number, height: number },
+}
+
+export const BASE_CANVAS = { width: 1200, height: 800 };
+
+const deviceSizes: DeviceSizes = {
+    mobile: { width: 375, height: 667 },
+    tablet: { width: 768, height: 1024 },
+    desktop: { width: 1200, height: 800 },
+};
 
 export default function Editor() {
     const {
@@ -17,14 +31,7 @@ export default function Editor() {
     } = useUndoRedo<CanvasNode[]>([])
     const [previewMode, setPreviewMode] = useState(false)
     const [selectedId, setSelectedId] = useState<string | null>(null)
-    const [device, setDevice] = useState<DeviceType>("desktop"); // default device
-
-    const deviceSizes = {
-        mobile: { width: 375, height: 667 },
-        tablet: { width: 768, height: 1024 },
-        desktop: { width: 1200, height: 800 },
-    };
-
+    const [device, setDevice] = useState<DeviceType>("desktop");
 
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
@@ -46,6 +53,13 @@ export default function Editor() {
         return () => window.removeEventListener("keydown", handler)
     }, [undo, redo])
 
+    useEffect(() => {
+        const data = localStorage.getItem('data')
+        if (data) {
+            const paredData = JSON.parse(data)
+            setNodes(paredData)
+        }
+    }, [])
 
     const updateNode = (
         id: string,
@@ -64,6 +78,7 @@ export default function Editor() {
                 if (node.type === "profileCard") return { ...node, ...(attrs as Partial<ProfileCardNode>) }
                 if (node.type === "carousel") return { ...node, ...(attrs as Partial<CarouselNode>) }
                 if (node.type === "qna") return { ...node, ...(attrs as Partial<QnaNode>) }
+                if (node.type === "header") return { ...node, ...(attrs as Partial<HeaderNode>) }
 
                 return node
             })
@@ -74,16 +89,13 @@ export default function Editor() {
         localStorage.setItem('data', JSON.stringify(nodes))
     }
 
-    useEffect(() => {
-        const data = localStorage.getItem('data')
-        if (data) {
-            const paredData = JSON.parse(data)
-            setNodes(paredData)
-        }
-    }, [])
+    const handleClosePreview = () => {
+        setPreviewMode(false);
+        setDevice("desktop");
+    }
 
     return (
-        <div className="h-screen w-screen flex flex-col bg-[#f5f6f8]">
+        <div className="h-screen w-screen flex flex-col bg-[#f5f6f8] ">
             {/* HEADER */}
             <Header
                 canRedo={canRedo}
@@ -95,6 +107,7 @@ export default function Editor() {
                 undo={undo}
                 device={device}
                 setDevice={setDevice}
+                handleClosePreview={handleClosePreview}
             />
 
 
@@ -115,14 +128,18 @@ export default function Editor() {
                         <div
                             className="
                                     bg-white
-                                    rounded-xl
                                     border border-gray-300
                                     shadow-[0_10px_40px_rgba(0,0,0,0.12)]
                                     "
                             style={{
-                                width: deviceSizes[device].width,
+                                width: "100%",
+                                maxWidth: deviceSizes[device].width,
                                 height: deviceSizes[device].height,
+                                overflowY: "scroll",
+                                overflowX: "auto",
+                                scrollbarGutter: "stable",
                             }}
+
                         >
                             <Canvas
                                 nodes={nodes}
@@ -131,6 +148,7 @@ export default function Editor() {
                                 updateNode={updateNode}
                                 setNodes={previewMode ? () => { } : setNodes}
                                 preview={previewMode}
+                                deviceSizes={deviceSizes[device]}
                             />
                         </div>
                     </div>

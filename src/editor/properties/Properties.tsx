@@ -509,82 +509,164 @@ export default function Properties({
     )
   }
 
- if (node.type === "qna") {
-  const n = node;
+  if (node.type === "qna") {
+    const n = node;
 
-  const updateQuestion = (itemId: string, value: string) => {
-    const items = n.items.map(item =>
-      item.id === itemId ? { ...item, question: value } : item
-    );
-    updateNode(n.id, { items });
-  };
-
-  const addQuestion = () => {
-    const newItem = {
-      id: crypto.randomUUID(),
-      question: "New Question?",
-      answer: ""
+    const updateQuestion = (itemId: string, value: string) => {
+      const items = n.items.map(item =>
+        item.id === itemId ? { ...item, question: value } : item
+      );
+      updateNode(n.id, { items });
     };
-    updateNode(n.id, { items: [...n.items, newItem] });
-  };
 
-  const removeQuestion = (itemId: string) => {
-    const items = n.items.filter(item => item.id !== itemId);
-    updateNode(n.id, { items });
-  };
+    const addQuestion = () => {
+      const newItem = {
+        id: crypto.randomUUID(),
+        question: "New Question?",
+        answer: ""
+      };
+      updateNode(n.id, { items: [...n.items, newItem] });
+    };
 
-  return (
-    <div style={{ width: 250, padding: 10 }}>
-      <h4>Q&A Properties</h4>
+    const removeQuestion = (itemId: string) => {
+      const items = n.items.filter(item => item.id !== itemId);
+      updateNode(n.id, { items });
+    };
 
-      {n.items.map(item => (
-        <div key={item.id} style={{ marginBottom: 10, borderBottom: "1px solid #eee", paddingBottom: 6 }}>
-          <input
-            type="text"
-            value={item.question}
-            onChange={(e) => updateQuestion(item.id, e.target.value)}
-            style={{ width: "100%", marginBottom: 4 }}
-          />
-          <button
-            onClick={() => removeQuestion(item.id)}
-            style={{ color: "red", fontSize: 12 }}
-          >
-            Remove
-          </button>
+    return (
+      <div style={{ width: 250, padding: 10 }}>
+        <h4>Q&A Properties</h4>
+
+        {n.items.map(item => (
+          <div key={item.id} style={{ marginBottom: 10, borderBottom: "1px solid #eee", paddingBottom: 6 }}>
+            <input
+              type="text"
+              value={item.question}
+              onChange={(e) => updateQuestion(item.id, e.target.value)}
+              style={{ width: "100%", marginBottom: 4 }}
+            />
+            <button
+              onClick={() => removeQuestion(item.id)}
+              style={{ color: "red", fontSize: 12 }}
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+
+        <button
+          onClick={addQuestion}
+          style={{ marginTop: 6, background: "#2563eb", color: "#fff", padding: "6px 12px", borderRadius: 4, fontSize: 13 }}
+        >
+          Add Question
+        </button>
+
+        <div style={{ marginTop: 12 }}>
+          <label>
+            X:
+            <input
+              type="number"
+              value={n.x}
+              onChange={e => updateNode(n.id, { x: +e.target.value })}
+              style={{ width: "100%", marginTop: 4 }}
+            />
+          </label>
+
+          <label style={{ display: "block", marginTop: 8 }}>
+            Y:
+            <input
+              type="number"
+              value={n.y}
+              onChange={e => updateNode(n.id, { y: +e.target.value })}
+              style={{ width: "100%", marginTop: 4 }}
+            />
+          </label>
         </div>
-      ))}
-
-      <button
-        onClick={addQuestion}
-        style={{ marginTop: 6, background: "#2563eb", color: "#fff", padding: "6px 12px", borderRadius: 4, fontSize: 13 }}
-      >
-        Add Question
-      </button>
-
-      <div style={{ marginTop: 12 }}>
-        <label>
-          X:
-          <input
-            type="number"
-            value={n.x}
-            onChange={e => updateNode(n.id, { x: +e.target.value })}
-            style={{ width: "100%", marginTop: 4 }}
-          />
-        </label>
-
-        <label style={{ display: "block", marginTop: 8 }}>
-          Y:
-          <input
-            type="number"
-            value={n.y}
-            onChange={e => updateNode(n.id, { y: +e.target.value })}
-            style={{ width: "100%", marginTop: 4 }}
-          />
-        </label>
       </div>
-    </div>
-  );
-}
+    );
+  }
+  if (node.type === "header") {
+    const n = node
+
+    const updateMenuItem = (id: string, attrs: Partial<{ label: string, href: string }>) => {
+      updateNode(n.id, {
+        menu: n.menu.map(m => m.id === id ? { ...m, ...attrs } : m)
+      })
+    }
+
+    const addMenu = () => {
+      updateNode(n.id, {
+        menu: [...n.menu, { id: crypto.randomUUID(), label: "New Menu", href: "#" }]
+      })
+    }
+
+    const removeMenu = (id: string) => {
+      updateNode(n.id, {
+        menu: n.menu.filter(m => m.id !== id)
+      })
+    }
+
+    return (
+      <div className="p-4 space-y-4">
+        <h4 className="font-semibold text-gray-800">Header Settings</h4>
+
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-600">Logo Text</label>
+          <input
+            value={n.logoText}
+            onChange={e => updateNode(n.id, { logoText: e.target.value })}
+            className="w-full border rounded-md p-1.5 text-sm focus:border-blue-500 focus:outline-none"
+          />
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h5 className="text-sm font-semibold text-gray-700">Menu Links</h5>
+            <button
+              onClick={addMenu}
+              className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded transition font-medium"
+            >
+              + Add
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {n.menu.map(m => (
+              <div key={m.id} className="p-3 border rounded-lg bg-gray-50 space-y-2 relative group">
+                <button
+                  onClick={() => removeMenu(m.id)}
+                  className="absolute -top-2 -right-2 bg-white border shadow-sm rounded-full p-1 text-xs hover:bg-red-50 hover:text-red-500 transition"
+                  title="Remove link"
+                >
+                  ❌
+                </button>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Label</label>
+                  <input
+                    value={m.label}
+                    onChange={e => updateMenuItem(m.id, { label: e.target.value })}
+                    className="w-full border rounded p-1.5 text-xs bg-white focus:border-blue-500 focus:outline-none"
+                    placeholder="Label"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">URL (Href)</label>
+                  <input
+                    value={m.href}
+                    onChange={e => updateMenuItem(m.id, { href: e.target.value })}
+                    className="w-full border rounded p-1.5 text-xs bg-white focus:border-blue-500 focus:outline-none"
+                    placeholder="#"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
 
 

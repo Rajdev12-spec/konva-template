@@ -12,6 +12,7 @@ type Props = {
   setSelectedId: (id: string | null) => void
   onUpdate: (id: string, attrs: Partial<VideoNode>) => void
   setNodes: React.Dispatch<React.SetStateAction<CanvasNode[]>>
+  scale: number
 }
 
 export default function EditableVideo({
@@ -22,6 +23,7 @@ export default function EditableVideo({
   setNodes,
   onUpdate,
   setSelectedId,
+  scale
 }: Props) {
 
   const imageRef = useRef<Konva.Image>(null)
@@ -30,9 +32,6 @@ export default function EditableVideo({
   const [, forceRender] = useState(0)
   const [posDown, setPosDown] = useState(false)
   const [origIndex, setOrigIndex] = useState<number | null>(null)
-  const [actionPos, setActionPos] = useState({ x: 0, y: 0 })
-
-
   /* Create video element */
   useEffect(() => {
     const video = document.createElement("video")
@@ -94,29 +93,22 @@ export default function EditableVideo({
     return () => cancelAnimationFrame(animId)
   }, [])
 
-  useEffect(() => {
-    if (!selected || !imageRef.current) return
-    const box = imageRef.current.getClientRect()
-    const barWidth = 150
-    const barHeight = 40
-    const x = box.x + box.width / 2 - barWidth / 2
-    const y = box.y - barHeight - 8
-    setActionPos({ x, y })
-  }, [selected, node.x, node.y, node.width, node.height, node.rotation, node.src])
-
-
-  const duplicateNode = () => {
-    const copy = { ...node, id: crypto.randomUUID(), x: node.x + 10, y: node.y + 10 }
+  /* Duplicate */
+  const duplicateNode = (e: any) => {
+    if (e) e.cancelBubble = true
+    const copy = { ...node, id: crypto.randomUUID(), x: node.x + 20, y: node.y + 20 }
     setNodes((prev: any[]) => [...prev, copy])
     setSelectedId(copy.id)
   }
 
-  const deleteNode = () => {
+  const deleteNode = (e: any) => {
+    if (e) e.cancelBubble = true
     setNodes((prev: any[]) => prev.filter(n => n.id !== node.id))
     setSelectedId(null)
   }
 
-  const togglePosition = () => {
+  const togglePosition = (e: any) => {
+    if (e) e.cancelBubble = true
     if (!posDown) {
       setNodes((prev: any[]) => {
         const idx = prev.findIndex(n => n.id === node.id)
@@ -183,7 +175,13 @@ export default function EditableVideo({
       {!preview && selected &&
         <>
           <Transformer ref={trRef} />
-          <Group x={actionPos.x} y={actionPos.y} listening>
+          <Group
+            x={node.x + (node.width / 2) - (150 / 2 / scale)}
+            y={node.y - (50 / scale)}
+            scaleX={1 / scale}
+            scaleY={1 / scale}
+            listening
+          >
             <Rect width={150} height={40} cornerRadius={6} fill="#ffffff" stroke="#d1d5db" shadowColor="#000" shadowBlur={6} shadowOpacity={0.06} />
             <Path
               data="M9 18q-.825 0-1.412-.587T7 16V4q0-.825.588-1.412T9 2h9q.825 0 1.413.588T20 4v12q0 .825-.587 1.413T18 18zm-4 4q-.825 0-1.412-.587T3 20V6h2v14h11v2z"
@@ -193,8 +191,9 @@ export default function EditableVideo({
               scaleY={0.85}
               fill="#111827"
               onClick={duplicateNode}
-              onMouseEnter={e => { const stage = e.target.getStage(); if (stage && stage.container()) { stage.container().style.cursor = 'pointer' } }}
-              onMouseLeave={e => { const stage = e.target.getStage(); if (stage && stage.container()) { stage.container().style.cursor = 'default' } }}
+              onTap={duplicateNode}
+              onMouseEnter={e => { e.target.getStage()!.container().style.cursor = 'pointer' }}
+              onMouseLeave={e => { e.target.getStage()!.container().style.cursor = 'default' }}
             />
 
             <Path
@@ -205,18 +204,22 @@ export default function EditableVideo({
               scaleY={0.85}
               fill="#111827"
               onClick={deleteNode}
-              onMouseEnter={e => { const stage = e.target.getStage(); if (stage && stage.container()) { stage.container().style.cursor = 'pointer' } }}
-              onMouseLeave={e => { const stage = e.target.getStage(); if (stage && stage.container()) { stage.container().style.cursor = 'default' } }}
+              onTap={deleteNode}
+              onMouseEnter={e => { e.target.getStage()!.container().style.cursor = 'pointer' }}
+              onMouseLeave={e => { e.target.getStage()!.container().style.cursor = 'default' }}
             />
 
             <Text
               text={`Position ${posDown ? '↑' : '↓'}`}
               x={72}
-              y={8}
+              y={12}
               fontSize={12}
+              fontStyle="bold"
+              fill="#111827"
               onClick={togglePosition}
-              onMouseEnter={e => { const stage = e.target.getStage(); if (stage && stage.container()) { stage.container().style.cursor = 'pointer' } }}
-              onMouseLeave={e => { const stage = e.target.getStage(); if (stage && stage.container()) { stage.container().style.cursor = 'default' } }}
+              onTap={togglePosition}
+              onMouseEnter={e => { e.target.getStage()!.container().style.cursor = 'pointer' }}
+              onMouseLeave={e => { e.target.getStage()!.container().style.cursor = 'default' }}
             />
           </Group>
 

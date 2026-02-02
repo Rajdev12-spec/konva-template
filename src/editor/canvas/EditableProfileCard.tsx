@@ -18,6 +18,7 @@ type Props = {
   setSelectedId: (id: string | null) => void
   onUpdate: (id: string, attrs: Partial<ProfileCardNode>) => void
   setNodes: React.Dispatch<React.SetStateAction<CanvasNode[]>>
+  scale: number
 }
 
 const MIN_WIDTH = 150
@@ -30,7 +31,8 @@ export default function EditableProfileCard({
   onSelect,
   onUpdate,
   setNodes,
-  setSelectedId
+  setSelectedId,
+  scale
 }: Props) {
   const groupRef = useRef<Konva.Group>(null)
   const trRef = useRef<Konva.Transformer>(null)
@@ -38,7 +40,6 @@ export default function EditableProfileCard({
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [posDown, setPosDown] = useState(false)
   const [origIndex, setOrigIndex] = useState<number | null>(null)
-  const [actionPos, setActionPos] = useState({ x: 0, y: 0 })
 
   /* Load profile image */
   useEffect(() => {
@@ -58,37 +59,29 @@ export default function EditableProfileCard({
   }, [selected, preview])
 
 
-  /* Action bar position (EXACT same logic as Video) */
-  useEffect(() => {
-    if (!selected || !groupRef.current) return
-    const box = groupRef.current.getClientRect()
-    const barWidth = 150
-    const barHeight = 40
-    const x = box.x + box.width / 2 - barWidth / 2
-    const y = box.y - barHeight - 8
-    setActionPos({ x, y })
-  }, [selected, node.x, node.y, node.width, node.height])
-
   /* Duplicate */
-  const duplicateNode = () => {
+  const duplicateNode = (e: any) => {
+    if (e) e.cancelBubble = true
     const copy = {
       ...node,
       id: crypto.randomUUID(),
-      x: node.x + 10,
-      y: node.y + 10
+      x: node.x + 20,
+      y: node.y + 20
     }
     setNodes(prev => [...prev, copy])
     setSelectedId(copy.id)
   }
 
   /* Delete */
-  const deleteNode = () => {
+  const deleteNode = (e: any) => {
+    if (e) e.cancelBubble = true
     setNodes(prev => prev.filter(n => n.id !== node.id))
     setSelectedId(null)
   }
 
   /* Position toggle */
-  const togglePosition = () => {
+  const togglePosition = (e: any) => {
+    if (e) e.cancelBubble = true
     if (!posDown) {
       setNodes(prev => {
         const idx = prev.findIndex(n => n.id === node.id)
@@ -205,9 +198,15 @@ export default function EditableProfileCard({
         />
       </Group>
 
-      {/* ================= ACTION TOOLBAR (SAME AS CARD) ================= */}
+      {/* Action toolbar */}
       {!preview && selected && (
-        <Group x={actionPos.x} y={actionPos.y} listening>
+        <Group
+          x={node.x + (node.width / 2) - (150 / 2 / scale)}
+          y={node.y - (50 / scale)}
+          scaleX={1 / scale}
+          scaleY={1 / scale}
+          listening
+        >
           <Rect
             width={150}
             height={40}
@@ -228,6 +227,9 @@ export default function EditableProfileCard({
             scaleY={0.85}
             fill="#111827"
             onClick={duplicateNode}
+            onTap={duplicateNode}
+            onMouseEnter={e => { e.target.getStage()!.container().style.cursor = 'pointer' }}
+            onMouseLeave={e => { e.target.getStage()!.container().style.cursor = 'default' }}
           />
 
           {/* Delete */}
@@ -239,15 +241,23 @@ export default function EditableProfileCard({
             scaleY={0.85}
             fill="#111827"
             onClick={deleteNode}
+            onTap={deleteNode}
+            onMouseEnter={e => { e.target.getStage()!.container().style.cursor = 'pointer' }}
+            onMouseLeave={e => { e.target.getStage()!.container().style.cursor = 'default' }}
           />
 
           {/* Position */}
           <Text
             text={`Position ${posDown ? "↑" : "↓"}`}
             x={72}
-            y={8}
+            y={12}
             fontSize={12}
+            fontStyle="bold"
+            fill="#111827"
             onClick={togglePosition}
+            onTap={togglePosition}
+            onMouseEnter={e => { e.target.getStage()!.container().style.cursor = 'pointer' }}
+            onMouseLeave={e => { e.target.getStage()!.container().style.cursor = 'default' }}
           />
         </Group>
       )}
