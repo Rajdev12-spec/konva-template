@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useUndoRedo } from "../hooks/useUndoRedo"
-import type { CanvasNode, RectNode, TextNode, ImageNode, VideoNode, LinkNode, CardNode, ProfileCardNode, CarouselNode, QnaNode, DeviceType, HeaderNode } from "../types/editor"
+import type { CanvasNode, RectNode, TextNode, ImageNode, VideoNode, LinkNode, CardNode, ProfileCardNode, CarouselNode, QnaNode, DeviceType, HeaderNode, FooterNode } from "../types/editor"
 import Canvas from "./canvas/Canvas"
 import Header from "./header"
 import Properties from "./properties/Properties"
@@ -79,6 +79,7 @@ export default function Editor() {
                 if (node.type === "carousel") return { ...node, ...(attrs as Partial<CarouselNode>) }
                 if (node.type === "qna") return { ...node, ...(attrs as Partial<QnaNode>) }
                 if (node.type === "header") return { ...node, ...(attrs as Partial<HeaderNode>) }
+                if (node.type === "footer") return { ...node, ...(attrs as Partial<FooterNode>) }
 
                 return node
             })

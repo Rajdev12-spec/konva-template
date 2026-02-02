@@ -670,5 +670,41 @@ export default function Properties({
 
 
 
+  if (node.type === "footer") {
+    const n = node
+    return (
+      <div className="p-4 space-y-4">
+        <h4 className="font-semibold text-gray-800">Footer Settings</h4>
+
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-600">Copyright Text</label>
+          <input
+            value={n.text}
+            onChange={e => updateNode(n.id, { text: e.target.value })}
+            className="w-full border rounded-md p-1.5 text-sm focus:border-blue-500 focus:outline-none"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-600">Background Color</label>
+          <div className="flex gap-2">
+            <input
+              type="color"
+              value={n.background}
+              onChange={e => updateNode(n.id, { background: e.target.value })}
+              className="w-10 h-10 border rounded-md p-1"
+            />
+            <input
+              type="text"
+              value={n.background}
+              onChange={e => updateNode(n.id, { background: e.target.value })}
+              className="flex-1 border rounded-md p-1.5 text-sm focus:border-blue-500 focus:outline-none"
+            />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return null
 }

@@ -144,6 +144,17 @@ export type HeaderNode = {
 
 
 
+export type FooterNode = {
+  id: string
+  type: "footer"
+  x: number
+  y: number
+  width: number
+  height: number
+  text: string
+  background: string
+}
+
 export type CanvasNode =
   TextNode
   | RectNode
@@ -155,3 +166,4 @@ export type CanvasNode =
   | CarouselNode
   | QnaNode
   | HeaderNode
+  | FooterNode

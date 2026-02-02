@@ -1,10 +1,11 @@
 // Canvas.tsx
 import { useEffect, useRef, useState } from "react"
 import { Layer, Stage } from "react-konva"
-import type { CanvasNode, CarouselNode, HeaderNode, ImageNode, RectNode, TextNode, VideoNode } from "../../types/editor"
+import type { CanvasNode, CarouselNode, FooterNode, HeaderNode, ImageNode, RectNode, TextNode, VideoNode } from "../../types/editor"
 import { BASE_CANVAS } from "../Editor"
 import EditableCard from "./EditableCard"
 import EditableCarousel from "./EditableCarousel"
+import EditableFooter from "./EditableFooter"
 import EditableHeader from "./EditableHeader"
 import EditableImage from "./EditableImage"
 import EditableLink from "./EditableLink"
@@ -58,15 +59,27 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
 
   const scale = containerWidth / BASE_CANVAS.width;
 
+  // Calculate the virtual height needed to fill the physical device viewport at current scale
+  const minVirtualHeight = deviceSizes.height / scale
   const maxContentHeight = Math.max(
+    minVirtualHeight,
     BASE_CANVAS.height,
-    ...nodes.map(node => {
-      const h = (node as any).height || 0;
-      return node.y + h;
-    })
+    ...nodes
+      .filter(n => n.type !== "footer")
+      .map(node => {
+        let h = 0
+        if (node.type === "text") h = node.fontSize * 1.5
+        else if ('height' in node) h = (node as any).height || 0
+        return node.y + h;
+      })
   )
 
-  const stageHeight = maxContentHeight * scale;
+  // Find footer and update its Y position
+  const footer = nodes.find(n => n.type === "footer") as FooterNode | undefined;
+  const footerY = maxContentHeight;
+  const finalStageHeight = footer ? footerY + footer.height : maxContentHeight;
+
+  const stageHeight = finalStageHeight * scale;
 
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -82,10 +95,13 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
       | "carousel"
       | "qna"
       | "header"
+      | "footer"
 
     const bounds = e.currentTarget.getBoundingClientRect()
-    const x = e.clientX - bounds.left
-    const y = e.clientY - bounds.top
+    const scrollX = e.currentTarget.scrollLeft
+    const scrollY = e.currentTarget.scrollTop
+    const x = e.clientX - bounds.left + scrollX
+    const y = e.clientY - bounds.top + scrollY
     const baseX = (x - offsetX) / scale
     const baseY = (y - offsetY) / scale
 
@@ -272,9 +288,21 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
         }
       ])
     }
-    // if(type==="header")[
-    //   setNodes((node)=>)
-    // ]
+    if (type === "footer") {
+      const newNode: FooterNode = {
+        id: crypto.randomUUID(),
+        type: "footer",
+        x: 0,
+        y: maxContentHeight,
+        width: 1200,
+        height: 100,
+        text: "© 2024 Your Company. All rights reserved.",
+        background: "#1f2937"
+      }
+      setNodes(prev => [...prev.filter(n => n.type !== "footer"), newNode])
+      setSelectedId(newNode.id)
+      return;
+    }
   }
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => e.preventDefault();
@@ -314,6 +342,17 @@ export default function Canvas({ nodes, selectedId, setSelectedId, updateNode, s
                   <EditableHeader
                     key={node.id}
                     node={node}
+                    selected={!preview && node.id === selectedId}
+                    preview={preview}
+                    onSelect={() => !preview && setSelectedId(node.id)}
+                  />
+                )
+              }
+              if (node.type === "footer") {
+                return (
+                  <EditableFooter
+                    key={node.id}
+                    node={{ ...node, y: footerY } as FooterNode}
                     selected={!preview && node.id === selectedId}
                     preview={preview}
                     onSelect={() => !preview && setSelectedId(node.id)}

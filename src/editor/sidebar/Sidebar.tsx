@@ -6,6 +6,7 @@ type SidebarItem = {
 
 const ITEMS: SidebarItem[] = [
   { label: "Header", type: "header" },
+  { label: "Footer", type: "footer" },
   { label: "Cards", type: "card" },
   { label: "Video", type: "video" },
   { label: "Link", type: "link" },
